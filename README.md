@@ -6,6 +6,7 @@ This python script is a tool for performing MAC Flood attacks using multithreadi
 
 
 ### install
+python3 and scapy
 
 ```bash
 git clone https://github.com/savasick/macflood.git
@@ -14,7 +15,6 @@ python3 -m venv venv
 source venv/bin/activate
 pip3 install -r requirements.txt
 ```
-or just need python3 and scapy
 
 ### run
 
