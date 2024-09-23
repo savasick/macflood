@@ -1,6 +1,6 @@
 # MAC Flood
 
-This python script is a tool for performing MAC Flood attacks using multithreading. It generates random MAC addresses and sends ARP packets to the local network, which can lead to overloading of switches.
+This python script is a tool for performing MAC Flood attack using multithreading. It generates random MAC addresses and sends ARP packets to the local network, which can lead to overloading of switches.
 
 
 ### install
