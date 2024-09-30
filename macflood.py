@@ -5,9 +5,7 @@ import sys
 import threading
 import os
 import time
-sys.stderr = None 
 from scapy.all import *
-sys.stderr = sys.__stderr__
 
 packetCount = 0
 stop_event = threading.Event()
